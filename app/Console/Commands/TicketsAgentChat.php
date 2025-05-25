@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Agents\Tickets\TicketsAgent;
 use NeuronAI\Chat\Messages\UserMessage;
+use NeuronAI\Chat\History\InMemoryChatHistory;
 
 class TicketsAgentChat extends Command
 {
@@ -28,6 +29,7 @@ class TicketsAgentChat extends Command
     public function handle()
     {
         $this->info('Welcome to the Tickets Agent CLI!');
+        $history = new InMemoryChatHistory();
         while (true) {
             $query = $this->ask('Enter your query (or type "exit" to quit)');
             if (trim(strtolower($query)) === 'exit') {
@@ -35,8 +37,18 @@ class TicketsAgentChat extends Command
                 break;
             }
             $agent = TicketsAgent::make();
-            $response = $agent->chat(new UserMessage($query));
-            $this->line('Agent Response: ' . $response->getContent());
+            $userMessage = new UserMessage($query);
+            $history->addMessage($userMessage);
+            $response = $agent->chat($history->getMessages());
+            if ($response instanceof \NeuronAI\Chat\Messages\Message) {
+                $history->addMessage($response);
+                $this->line('Agent Response: ' . $response->getContent());
+            } else {
+                $this->line('Agent Response: ' . json_encode($response));
+            }
         }
     }
+
+
+
 }
