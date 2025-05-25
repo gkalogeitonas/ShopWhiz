@@ -58,6 +58,16 @@ Develop an external, multi-tenant service that allows e-shops (using OpenCart or
   * `filterProducts(filterJson)`
   * Optional: `getCategories()`, `getManufacturers()`
 * Responsible for maintaining context across messages
+* Always returns structured JSON response:
+  ```json
+  {
+    "message": "I found 5 waterproof hiking boots under €100. Here are the best options:",
+    "products": [...],
+    "has_products": true,
+    "follow_up_suggestions": ["Filter by size", "Show similar from other brands"]
+  }
+  ```
+* Handles empty results gracefully with helpful alternative suggestions
 
 ### 3.5 Multi-Tenancy Model
 
@@ -99,17 +109,99 @@ Develop an external, multi-tenant service that allows e-shops (using OpenCart or
 
 **5. Feed Handling**
 
-* Admin provides Google Merchant or Skroutz feed URL per tenant
-* Scheduled or manual sync job:
-
-  * Parses feed
-  * Generates JSON products
-  * Indexes in Meilisearch
-  * Embeds and inserts into vector DB
+* Shop owner provides a product feed endpoint from their e-shop
+* Scheduled periodic sync jobs (configurable interval per tenant):
+  * Fetches product data from tenant's endpoint
+  * Parses feed (supports Google Merchant, Skroutz XML, or JSON formats)
+  * Generates normalized JSON products
+  * Updates Meilisearch index
+  * Generates embeddings using OpenAI embeddings API and updates vector DB
+* Handles incremental updates and product deletions
+* Maintains sync status and error logs per tenant
 
 ---
 
-**6. Security & Access Control**
+**6. Chat Session Management**
+
+* Each conversation starts a new chat session
+* Session-based context management:
+  * Stores conversation history per session
+  * Maintains filter state across multiple turns
+  * Session expires after inactivity (configurable timeout)
+* `chat_sessions` table structure:
+  ```
+  id | tenant_id | session_id | user_id | messages | filter_state | created_at | updated_at
+  ```
+* No persistent cross-session memory (fresh start each conversation)
+
+---
+
+**7. LLM Response Structure**
+
+The LLM always returns a standardized JSON response regardless of query outcome:
+
+**Successful Product Search:**
+```json
+{
+  "message": "I found 12 waterproof hiking boots under €100. Here are the top options:",
+  "products": [
+    {
+      "id": "123",
+      "title": "Nike Waterproof Hiking Boot",
+      "price": "€89.99",
+      "brand": "Nike",
+      "image_url": "...",
+      "category": "Footwear > Hiking"
+    }
+  ],
+  "has_products": true,
+  "product_count": 12,
+  "follow_up_suggestions": [
+    "Filter by specific size",
+    "Show similar from Adidas", 
+    "See lighter weight options"
+  ]
+}
+```
+
+**No Products Found:**
+```json
+{
+  "message": "I couldn't find any waterproof hiking boots under €50. However, I have some great alternatives:",
+  "products": [],
+  "has_products": false,
+  "product_count": 0,
+  "alternative_suggestions": [
+    "Try increasing your budget to €75",
+    "Consider water-resistant boots instead",
+    "Look at trail running shoes with water protection"
+  ],
+  "follow_up_suggestions": [
+    "Show me boots under €75",
+    "What about water-resistant options?",
+    "Show trail running shoes"
+  ]
+}
+```
+
+---
+
+**8. Embedding Strategy**
+
+* **Vector Embeddings:** OpenAI text-embedding-ada-002 (or latest available model)
+* **Product Document Structure for Embedding:**
+  ```
+  "title brand category description features specifications price_range"
+  ```
+* **Embedding Process:**
+  * Concatenate key product fields into searchable text
+  * Generate embeddings via OpenAI API during feed sync
+  * Store embeddings in Qdrant with product metadata
+* **Query Embedding:** User queries embedded in real-time for semantic search
+
+---
+
+**9. Security & Access Control**
 
 * Each tenant has:
 
