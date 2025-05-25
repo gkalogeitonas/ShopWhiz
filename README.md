@@ -1,67 +1,92 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ShopWhiz: Multi-Tenant AI-Powered Conversational Product Assistant
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+ShopWhiz is a multi-tenant AI-powered conversational product assistant for e-shops. It combines semantic search via vector databases (Qdrant) with structured filtering (Meilisearch) to provide a natural language interface for product discovery.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Conversational AI**: Natural language understanding of product queries
+- **Semantic Search**: Vector database (Qdrant) for semantic matching
+- **Structured Filtering**: Meilisearch for faceted filtering and full-text search
+- **Multi-Tenant Support**: Isolated data environments per tenant
+- **Feed-Based Input**: Support for Google Merchant, Skroutz XML, and JSON formats
+- **Context Management**: Maintains chat context across multiple turns
+- **API-First Architecture**: Easy integration with e-commerce platforms
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Backend**: Laravel 10
+- **LLM**: Neuron AI (with OpenAI embeddings)
+- **Vector DB**: Qdrant
+- **Search Engine**: Meilisearch
+- **Database**: MySQL 8
+- **Authentication**: Laravel Sanctum
+- **Container Orchestration**: Docker & Docker Compose
 
-## Learning Laravel
+## Getting Started
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Prerequisites
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- Docker and Docker Compose
+- PHP 8.2+ (for local development)
+- Composer
+- Node.js & npm
+- OpenAI API key (for embeddings)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Installation
 
-## Laravel Sponsors
+See the detailed installation instructions in [Docker README](docker/README.md).
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+For quick development setup:
 
-### Premium Partners
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/shopwhiz.git
+cd shopwhiz
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+# Install dependencies
+composer install
+npm install
 
-## Contributing
+# Set up environment variables
+cp .env.example .env
+php artisan key:generate
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Start required services (Meilisearch and Qdrant)
+docker-compose -f docker-compose.dev.yml up -d
 
-## Code of Conduct
+# Run migrations
+php artisan migrate
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Start the development server
+php artisan serve
+```
 
-## Security Vulnerabilities
+## Project Documentation
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- [Product Requirements Document (PRD)](doc/prd.md)
+- [Docker Setup Guide](docker/README.md)
+
+## System Architecture
+
+ShopWhiz follows a multi-tenant architecture where each e-shop tenant has isolated data in:
+
+1. **Vector database** (Qdrant) for semantic search
+2. **Search engine** (Meilisearch) for structured filtering
+3. **Relational database** (MySQL) for tenant and session management
+
+The conversational AI layer builds on top of these services to provide natural language understanding of product queries.
+
+## API Endpoints
+
+ShopWhiz exposes two main API endpoints:
+
+- `/api/chat`: For natural language product queries
+- `/api/feed/import`: For uploading/syncing product feeds
+
+See the API documentation for more details.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is proprietary software. All rights reserved.
+
 # ShopWhiz

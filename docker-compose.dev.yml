@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: shopwhiz_meilisearch_dev
+    environment:
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY:-masterKey}
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - shopwhiz_dev
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: shopwhiz_qdrant_dev
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - shopwhiz_dev
+
+  # Optional: Database service (uncomment if you want to use containerized MySQL instead of local)
+  # db:
+  #   image: mysql:8
+  #   container_name: shopwhiz_db_dev
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - shopwhiz_db_data:/var/lib/mysql
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+  #     MYSQL_DATABASE: ${DB_DATABASE}
+  #     MYSQL_USER: ${DB_USERNAME}
+  #     MYSQL_PASSWORD: ${DB_PASSWORD}
+  #   networks:
+  #     - shopwhiz_dev
+
+networks:
+  shopwhiz_dev:
+
+volumes:
+  meilisearch_data:
+  qdrant_data:
+  # shopwhiz_db_data:

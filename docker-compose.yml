@@ -1,0 +1,96 @@
+version: '3'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: shopwhiz_app
+    volumes:
+      - ./:/var/www
+    environment:
+      APP_ENV: "production"
+      APP_DEBUG: "false"
+      DB_CONNECTION: ${DB_CONNECTION}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      MEILI_HOST: meilisearch
+      MEILI_PORT: 7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: 6333
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      - db
+      - meilisearch
+      - qdrant
+    networks:
+      - shopwhiz_net
+      - proxy
+
+  web:
+    image: nginx:alpine
+    container_name: shopwhiz_web
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.shopwhiz.rule=Host(`shopwhiz.kalogeitonas.xyz`)"
+      - "traefik.http.routers.shopwhiz.entrypoints=websecure"
+      - "traefik.http.routers.shopwhiz.tls.certresolver=letsencrypt"
+      - "traefik.http.services.shopwhiz.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.shopwhiz-headers.headers.customResponseHeaders.X-Forwarded-Proto=https"
+      - "traefik.http.middlewares.shopwhiz-headers.headers.frameDeny=true"
+      - "traefik.http.middlewares.shopwhiz-headers.headers.sslRedirect=true"
+      - "traefik.http.routers.shopwhiz.middlewares=shopwhiz-headers"
+    depends_on:
+      - app
+    networks:
+      - shopwhiz_net
+      - proxy
+
+  db:
+    image: mysql:8
+    container_name: shopwhiz_db
+    restart: unless-stopped
+    volumes:
+      - shopwhiz_db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - shopwhiz_net
+
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: shopwhiz_meilisearch
+    environment:
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY:-masterKey}
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - shopwhiz_net
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: shopwhiz_qdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - shopwhiz_net
+
+networks:
+  shopwhiz_net:
+  proxy:
+    external: true
+
+volumes:
+  shopwhiz_db_data:
+  meilisearch_data:
+  qdrant_data:
