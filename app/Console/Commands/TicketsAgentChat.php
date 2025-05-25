@@ -30,13 +30,13 @@ class TicketsAgentChat extends Command
     {
         $this->info('Welcome to the Tickets Agent CLI!');
         $history = new InMemoryChatHistory();
+        $agent = TicketsAgent::make();
         while (true) {
             $query = $this->ask('Enter your query (or type "exit" to quit)');
             if (trim(strtolower($query)) === 'exit') {
                 $this->info('Goodbye!');
                 break;
             }
-            $agent = TicketsAgent::make();
             $userMessage = new UserMessage($query);
             $history->addMessage($userMessage);
             $response = $agent->chat($history->getMessages());
