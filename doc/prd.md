@@ -78,6 +78,7 @@ Develop an external, multi-tenant service that allows e-shops (using OpenCart or
   ```
 * Products are isolated per tenant in both Meilisearch and vector DB
 * Each API call is authenticated via API token
+* Admin users authenticate through Laravel's built-in authentication system
 
 ---
 
@@ -211,19 +212,53 @@ The LLM always returns a standardized JSON response regardless of query outcome:
 
 ---
 
-**7. Optional Enhancements**
+**7. Admin Dashboard & User Interface Architecture**
+
+### 7.1 Architecture Approach
+
+The application will follow a hybrid architecture with two distinct frontends:
+
+* **Chat Widget**: Fully decoupled Vue.js SPA consuming the API endpoints
+* **Admin Dashboard**: Inertia.js + Vue.js monolith integrated with Laravel backend
+
+This hybrid approach provides:
+* Simplified authentication and state management for the admin section
+* Complete decoupling for the customer-facing chat widget
+* Reuse of backend validation and business logic in the admin interface
+
+### 7.2 Admin Dashboard Features
+
+* Tenant registration and management
+* API token generation and management
+* Feed configuration (URL, format, sync schedule)
+* Analytics and monitoring (usage stats, chat performance)
+* Feed sync status and error logs
+* Customization options for chat widget appearance
+
+### 7.3 Chat Widget Interface
+
+* Standalone Vue.js component that can be embedded in e-shops
+* Communicates with ShopWhiz backend via API
+* Configurable appearance (colors, position, size)
+* Support for product card display
+* Responsive design for mobile and desktop
+
+---
+
+**8. Optional Enhancements**
 
 * Category tree explorer for LLM and UI filters
-* Admin dashboard per tenant (usage, indexing status)
 * Autocomplete from Meilisearch
 * Relevance learning from chat feedback
 * Persistent sessions per user (via `chat_sessions` table)
 
 ---
 
-**8. Tech Stack**
+**9. Tech Stack**
 
 * Backend: Laravel
+* Frontend (Admin Dashboard): Inertia.js + Vue.js
+* Frontend (Chat Widget): Vue.js (standalone)
 * LLM: Neuron AI
 * Vector DB: Qdrant (or Chroma)
 * Search Engine: Meilisearch
@@ -232,10 +267,11 @@ The LLM always returns a standardized JSON response regardless of query outcome:
 
 ---
 
-**9. Next Steps**
+**10. Next Steps**
 
 * Finalize embedding model selection
 * Build feed parser & data normalizer
 * Setup Meilisearch + Qdrant with per-tenant support
 * Implement chat memory + LLM tool interface
+* Setup Inertia.js for admin dashboard
 * Launch MVP with conversational UI for one test tenant
