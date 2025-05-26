@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Agents\Tickets\TicketsAgent;
 use NeuronAI\Chat\Messages\UserMessage;
 use NeuronAI\Chat\History\InMemoryChatHistory;
+use App\Logging\AgentLogger;
 
 class TicketsAgentChat extends Command
 {
@@ -30,7 +31,12 @@ class TicketsAgentChat extends Command
     {
         $this->info('Welcome to the Tickets Agent CLI!');
         $history = new InMemoryChatHistory();
-        $agent = TicketsAgent::make();
+
+        // Use the extracted AgentLogger class
+        $logger = new AgentLogger();
+
+        $agent = TicketsAgent::make()->observe($logger);
+
         while (true) {
             $query = $this->ask('Enter your query (or type "exit" to quit)');
             if (trim(strtolower($query)) === 'exit') {
@@ -48,7 +54,4 @@ class TicketsAgentChat extends Command
             }
         }
     }
-
-
-
 }
