@@ -206,9 +206,7 @@ This hybrid approach provides:
 * Tenant registration and management
 * API token generation and management
 * Feed configuration (URL, format, sync schedule)
-* Analytics and monitoring (usage stats, chat performance)
-* Feed sync status and error logs
-* Customization options for chat widget appearance
+
 
 ### 7.3 Chat Widget Interface
 

@@ -42,4 +42,12 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Get the tenants for the user.
+     */
+    public function tenants()
+    {
+        return $this->hasMany(Tenant::class);
+    }
 }
