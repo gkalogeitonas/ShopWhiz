@@ -13,6 +13,14 @@ Develop an external, multi-tenant service that allows e-shops (using OpenCart or
 
 **2. Key Features**
 
+- Conversational assistant that guides users in filtering product listings
+- LLM-powered natural language understanding and reasoning
+- Structured filtering via Meilisearch with count-only access for the LLM
+- Frontend (user app) receives full results for the same query
+- Semantic enrichment via vector database (to be introduced in Phase 2)
+- Multi-tenant support with API token authentication
+
+
 * Conversational assistant that guides users in filtering product listings
 * LLM-powered natural language understanding and reasoning
 * Semantic search via vector database (e.g., Qdrant)
@@ -62,7 +70,6 @@ Develop an external, multi-tenant service that allows e-shops (using OpenCart or
   ```json
   {
     "message": "I found 5 waterproof hiking boots under €100. Here are the best options:",
-    "products": [...],
     "has_products": true,
     "follow_up_suggestions": ["Filter by size", "Show similar from other brands"]
   }
@@ -83,6 +90,22 @@ Develop an external, multi-tenant service that allows e-shops (using OpenCart or
 ---
 
 **4. Chat Interaction Flow (Conversational Filtering UX)**
+
+1. **User Input:** Customer types a natural request
+2. **LLM Request:** Message sent to Neuron AI
+3. **Category/Brand Reference:**
+   - LLM uses known lists of categories and brands to reason
+4. **Query Generation:**
+   - LLM builds structured query: `{"search": "κουρτίνα μπάνιου", "brand": "San Lorentzo", "price < 20"}`
+5. **Count Check Only:**
+   - Tool call: `getProductCount(filters)`
+   - Returns `product_count = 12`
+6. **Frontend Request:**
+   - Sends same query to `/api/products/search`
+   - Receives full product results to render to the user
+7. **Conversation Continuation:**
+   - LLM provides message and follow-up suggestions
+
 
 1. **User Input:** Customer types a natural request ("I want waterproof hiking boots under €100")
 2. **LLM Request:** Message sent to Neuron AI with tool access
@@ -137,57 +160,9 @@ Develop an external, multi-tenant service that allows e-shops (using OpenCart or
 
 ---
 
-**7. LLM Response Structure**
 
-The LLM always returns a standardized JSON response regardless of query outcome:
 
-**Successful Product Search:**
-```json
-{
-  "message": "I found 12 waterproof hiking boots under €100. Here are the top options:",
-  "products": [
-    {
-      "id": "123",
-      "title": "Nike Waterproof Hiking Boot",
-      "price": "€89.99",
-      "brand": "Nike",
-      "image_url": "...",
-      "category": "Footwear > Hiking"
-    }
-  ],
-  "has_products": true,
-  "product_count": 12,
-  "follow_up_suggestions": [
-    "Filter by specific size",
-    "Show similar from Adidas", 
-    "See lighter weight options"
-  ]
-}
-```
-
-**No Products Found:**
-```json
-{
-  "message": "I couldn't find any waterproof hiking boots under €50. However, I have some great alternatives:",
-  "products": [],
-  "has_products": false,
-  "product_count": 0,
-  "alternative_suggestions": [
-    "Try increasing your budget to €75",
-    "Consider water-resistant boots instead",
-    "Look at trail running shoes with water protection"
-  ],
-  "follow_up_suggestions": [
-    "Show me boots under €75",
-    "What about water-resistant options?",
-    "Show trail running shoes"
-  ]
-}
-```
-
----
-
-**8. Embedding Strategy**
+**7. Embedding Strategy**
 
 * **Vector Embeddings:** OpenAI text-embedding-ada-002 (or latest available model)
 * **Product Document Structure for Embedding:**
@@ -202,7 +177,7 @@ The LLM always returns a standardized JSON response regardless of query outcome:
 
 ---
 
-**9. Security & Access Control**
+**8. Security & Access Control**
 
 * Each tenant has:
 
@@ -212,7 +187,7 @@ The LLM always returns a standardized JSON response regardless of query outcome:
 
 ---
 
-**7. Admin Dashboard & User Interface Architecture**
+**9. Admin Dashboard & User Interface Architecture**
 
 ### 7.1 Architecture Approach
 
@@ -245,7 +220,18 @@ This hybrid approach provides:
 
 ---
 
-**8. Optional Enhancements**
+**10. Optional Enhancements**
+
+- Category tree explorer for LLM and UI filters
+- Autocomplete from Meilisearch
+- Relevance learning from chat feedback
+- Persistent sessions per user (via `chat_sessions` table)
+- Phase 2: Semantic category suggestion using vector database
+  - Vector DB used to match user query to products
+  - LLM samples most common `product_type` values in top semantic matches
+  - Used to propose or auto-select category filters before calling `getProductCount`
+  - Products still not returned directly to the LLM
+
 
 * Category tree explorer for LLM and UI filters
 * Autocomplete from Meilisearch
@@ -254,7 +240,7 @@ This hybrid approach provides:
 
 ---
 
-**9. Tech Stack**
+**11. Tech Stack**
 
 * Backend: Laravel
 * Frontend (Admin Dashboard): Inertia.js + Vue.js
@@ -269,9 +255,13 @@ This hybrid approach provides:
 
 **10. Next Steps**
 
-* Finalize embedding model selection
-* Build feed parser & data normalizer
-* Setup Meilisearch + Qdrant with per-tenant support
-* Implement chat memory + LLM tool interface
-* Setup Inertia.js for admin dashboard
-* Launch MVP with conversational UI for one test tenant
+- Finalize embedding model selection
+- Build feed parser & data normalizer
+- Setup Meilisearch with per-tenant support
+- Implement chat memory + LLM tool interface
+- Setup Inertia.js for admin dashboard
+- Launch MVP with conversational UI for one test tenant
+- Implement `getProductCount` Meilisearch tool
+- Restrict LLM to metadata-level access only (count, filters)
+- Phase 2: Integrate vector database for category guidance
+- Add category frequency analysis on top semantic hits
