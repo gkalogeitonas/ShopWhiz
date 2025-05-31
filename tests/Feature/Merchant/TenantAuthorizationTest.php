@@ -6,49 +6,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('user can only view their own tenant', function () {
-    // Create two users
-    $user1 = User::factory()->create();
-    $user2 = User::factory()->create();
-
-    // Create tenant for first user
-    $tenant1 = Tenant::create([
-        'name' => 'User 1 Tenant',
-        'user_id' => $user1->id,
-        'meilisearch_index' => 'products_user1',
-        'vector_namespace' => 'user1',
-        'api_token' => bin2hex(random_bytes(32)),
-        'active' => true,
-    ]);
-
-    // Create tenant for second user
-    $tenant2 = Tenant::create([
-        'name' => 'User 2 Tenant',
-        'user_id' => $user2->id,
-        'meilisearch_index' => 'products_user2',
-        'vector_namespace' => 'user2',
-        'api_token' => bin2hex(random_bytes(32)),
-        'active' => true,
-    ]);
-
-    // When user1 visits dashboard, should only see their own tenant
-    $this->actingAs($user1);
-
-    // In tests, we need to manually set the session
-    // The middleware runs during HTTP requests but not during tests
-    session(['tenant_id' => $tenant1->id]);
-
-    // Now check session properly contains the tenant_id
-    $this->assertEquals($tenant1->id, session('tenant_id'));
-
-    $response = $this->get(route('merchant.dashboard'));
-
-    $response->assertStatus(200);
-    $response->assertInertia(fn ($assert) => $assert
-        ->has('stats')
-        ->where('stats.tenant', 'User 1 Tenant')
-    );
-});
 
 test('user cannot view tenant details of another user', function () {
     // Create two users

@@ -36,8 +36,6 @@ Route::middleware('auth')->group(function () {
 
     // Merchant routes
     Route::prefix('merchant')->name('merchant.')->group(function () {
-        Route::get('/', [App\Http\Controllers\Merchant\MerchantDashboardController::class, 'index'])->name('dashboard');
-
         // Tenant management
         Route::resource('tenants', App\Http\Controllers\Merchant\TenantController::class);
 

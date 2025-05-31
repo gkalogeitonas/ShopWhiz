@@ -6,15 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('authenticated user can view merchant dashboard', function () {
-    $user = User::factory()->create();
 
-    $response = $this
-        ->actingAs($user)
-        ->get(route('merchant.dashboard'));
-
-    $response->assertStatus(200);
-});
 
 test('authenticated user can view tenant index', function () {
     $user = User::factory()->create();
