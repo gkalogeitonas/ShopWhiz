@@ -212,8 +212,6 @@ This hybrid approach provides:
 
 * Standalone Vue.js component that can be embedded in e-shops
 * Communicates with ShopWhiz backend via API
-* Configurable appearance (colors, position, size)
-* Support for product card display
 * Responsive design for mobile and desktop
 
 ---

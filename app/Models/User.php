@@ -44,10 +44,10 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the tenants for the user.
+     * Get the tenant for the user.
      */
-    public function tenants()
+    public function tenant()
     {
-        return $this->hasMany(Tenant::class);
+        return $this->hasOne(Tenant::class);
     }
 }

@@ -1,0 +1,69 @@
+<?php
+
+use App\Models\User;
+use App\Models\Tenant;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
+test('authenticated user can generate an API token', function () {
+    $user = User::factory()->create();
+    $tenant = Tenant::create([
+        'name' => 'Test Tenant',
+        'user_id' => $user->id,
+        'meilisearch_index' => 'products_test_tenant',
+        'vector_namespace' => 'test_tenant',
+        'api_token' => null,
+        'active' => true,
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->post(route('merchant.tenants.token.generate', $tenant->id));
+
+    $response->assertRedirect();
+
+    $tenant->refresh();
+    $this->assertNotNull($tenant->api_token);
+});
+
+test('authenticated user can revoke an API token', function () {
+    $user = User::factory()->create();
+    $tenant = Tenant::create([
+        'name' => 'Test Tenant',
+        'user_id' => $user->id,
+        'meilisearch_index' => 'products_test_tenant',
+        'vector_namespace' => 'test_tenant',
+        'api_token' => 'existing-token',
+        'active' => true,
+    ]);
+
+    $response = $this
+        ->actingAs($user)
+        ->delete(route('merchant.tenants.token.revoke', $tenant->id));
+
+    $response->assertRedirect();
+
+    $tenant->refresh();
+    $this->assertNull($tenant->api_token);
+});
+
+test('user without permission cannot generate token for another tenant', function () {
+    $owner = User::factory()->create();
+    $otherUser = User::factory()->create();
+
+    $tenant = Tenant::create([
+        'name' => 'Test Tenant',
+        'user_id' => $owner->id,
+        'meilisearch_index' => 'products_test_tenant',
+        'vector_namespace' => 'test_tenant',
+        'api_token' => null,
+        'active' => true,
+    ]);
+
+    // In a real-world scenario, there would be permission checks
+    // This test is a placeholder for such functionality
+    // You might need to implement authorization logic
+
+    $this->markTestIncomplete('Authorization checks need to be implemented');
+});

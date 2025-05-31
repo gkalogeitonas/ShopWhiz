@@ -44,8 +44,12 @@ class TenantController extends Controller
         $tenant->user_id = auth()->id();
         $tenant->meilisearch_index = 'products_' . strtolower(str_replace(' ', '_', $validated['name']));
         $tenant->vector_namespace = strtolower(str_replace(' ', '_', $validated['name']));
-        $tenant->generateApiToken();
+        // Set a default token value to satisfy NOT NULL constraint
+        $tenant->api_token = 'initial_' . bin2hex(random_bytes(16));
         $tenant->save();
+
+        // Generate a proper API token after saving
+        $tenant->generateApiToken();
 
         return redirect()->route('merchant.tenants.index')->with('success', 'Tenant created successfully.');
     }
@@ -56,6 +60,11 @@ class TenantController extends Controller
     public function show(string $id)
     {
         $tenant = \App\Models\Tenant::with(['feeds', 'user'])->findOrFail($id);
+
+        // Check if the tenant belongs to the authenticated user
+        if ($tenant->user_id !== auth()->id() && !auth()->user()->is_admin) {
+            abort(403, 'Unauthorized action.');
+        }
 
         return inertia('Merchant/Tenants/Show', [
             'tenant' => $tenant,
@@ -81,6 +90,11 @@ class TenantController extends Controller
     {
         $tenant = \App\Models\Tenant::findOrFail($id);
 
+        // Check if the tenant belongs to the authenticated user
+        if ($tenant->user_id !== auth()->id() && !auth()->user()->is_admin) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'active' => 'boolean',
@@ -100,6 +114,12 @@ class TenantController extends Controller
     public function destroy(string $id)
     {
         $tenant = \App\Models\Tenant::findOrFail($id);
+
+        // Check if the tenant belongs to the authenticated user
+        if ($tenant->user_id !== auth()->id() && !auth()->user()->is_admin) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $tenant->delete();
 
         return redirect()->route('merchant.tenants.index')->with('success', 'Tenant deleted successfully.');

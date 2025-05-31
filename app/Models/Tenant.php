@@ -50,4 +50,17 @@ class Tenant extends Model
 
         return $this->api_token;
     }
+
+    /**
+     * Revoke (reset) the API token for the tenant.
+     * Since api_token can't be NULL due to DB constraints, we set it to a placeholder value.
+     */
+    public function revokeApiToken()
+    {
+        $this->update([
+            'api_token' => 'revoked_' . time(),
+        ]);
+
+        return true;
+    }
 }

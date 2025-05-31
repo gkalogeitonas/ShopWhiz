@@ -24,7 +24,7 @@ class ApiTokenController extends Controller
     public function revoke(Request $request, string $id)
     {
         $tenant = \App\Models\Tenant::findOrFail($id);
-        $tenant->update(['api_token' => null]);
+        $tenant->revokeApiToken();
 
         return back()->with('success', 'API token revoked successfully.');
     }
